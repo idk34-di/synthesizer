@@ -48,15 +48,6 @@
     background: var(--surface);
   }
  
-  .logo {
-    font-family: var(--font-mono);
-    font-size: 20px;
-    color: var(--accent);
-    letter-spacing: 3px;
-  }
- 
-  .logo span { color: var(--accent2); }
- 
   .header-right {
     display: flex;
     align-items: center;
@@ -483,10 +474,8 @@
 <body>
  
 <header>
-  <div class="logo">PO<span>-</span>WEB</div>
   <div class="header-right">
     <div class="rec-indicator" id="rec-dot"></div>
-    <div class="header-tag">POCKET OPERATOR • FREE • NO ADS</div>
   </div>
 </header>
  
@@ -506,7 +495,6 @@
   </div>
 </main>
  
-<footer>PO-WEB v2.0 — open source — nessuna pubblicità — nessun account</footer>
  
 <script>
 // ═══════════════════════════════════════════════
@@ -894,7 +882,7 @@ function renderDevice() {
     <div class="device">
       <div class="screen">
         <div class="screen-top">
-          <span class="screen-label">${dev.name} • PO-WEB</span>
+          <span class="screen-label">${dev.name}</span>
           <span class="screen-bpm">${state.bpm} BPM</span>
         </div>
         <div class="screen-row">
