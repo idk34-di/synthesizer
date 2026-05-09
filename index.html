@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PO-WEB — Pocket Operator gratuito</title>
+<title>:3</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap');
  
@@ -380,6 +380,78 @@
   }
   .sound-form input::placeholder { color: var(--text2); }
   .form-full { grid-column: 1/-1; display: flex; gap: 8px; }
+
+  /* ── CUSTOM KNOBS IN FORM ── */
+  .custom-knobs-row {
+    grid-column: 1/-1;
+    display: flex;
+    gap: 15px;
+    margin-top: .5rem;
+    padding: .75rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .custom-knob-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .custom-knob {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: ns-resize;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    user-select: none;
+  }
+
+  .custom-knob-dot {
+    width: 2px; height: 12px;
+    background: var(--accent);
+    border-radius: 1px;
+    position: absolute;
+    top: 3px;
+    transform-origin: bottom center;
+  }
+
+  .custom-knob-val {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--accent);
+    min-width: 45px;
+    text-align: center;
+  }
+
+  .custom-knob-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--text2);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .preview-btn {
+    padding: 6px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all .1s;
+  }
+
+  .preview-btn:hover, .preview-btn.playing {
+    background: var(--accent);
+    color: var(--pad-text);
+  }
  
   /* ── MEMO SECTION ── */
   .memo-section {
@@ -468,6 +540,7 @@
     .knobs-row { gap: 12px; }
     .knob { width: 40px; height: 40px; }
     .sound-form { grid-template-columns: 1fr; }
+    .custom-knobs-row { gap: 10px; }
   }
 </style>
 </head>
@@ -753,6 +826,13 @@ const state = {
   release: 0.5,
   fx: { reverb: false, delay: false },
   showAdd: false,
+  customForm: {
+    freq: 440,
+    sweep: null,
+    dur: 0.3,
+    filter: 5000,
+    wave: 'sine'
+  }
 };
  
 DEVICES.forEach(d => {
@@ -856,21 +936,47 @@ function renderDevice() {
     { id:'rel',    label:'RELEASE',angle:relAngle,    val: state.release.toFixed(1) + 's' },
   ];
  
+  const customKnobFreq = Math.max(0, Math.min(1, (state.customForm.freq - 20) / 7980));
+  const customKnobSweep = state.customForm.sweep ? Math.max(0, Math.min(1, (state.customForm.sweep - 20) / 7980)) : 0.5;
+  const customKnobDur = Math.max(0, Math.min(1, (state.customForm.dur - 0.05) / 2.95));
+  const customKnobFilter = Math.max(0, Math.min(1, (state.customForm.filter - 100) / 19900));
+
+  const customKnobs = [
+    { id: 'freq', label: 'FREQ', angle: -135 + customKnobFreq * 270, val: Math.round(state.customForm.freq) + ' Hz' },
+    { id: 'sweep', label: 'SWEEP', angle: -135 + customKnobSweep * 270, val: state.customForm.sweep ? Math.round(state.customForm.sweep) + ' Hz' : '---' },
+    { id: 'dur', label: 'DUR', angle: -135 + customKnobDur * 270, val: state.customForm.dur.toFixed(2) + 's' },
+    { id: 'filter', label: 'FILT', angle: -135 + customKnobFilter * 270, val: Math.round(state.customForm.filter / 100) / 10 + 'k' },
+  ];
+
   const addPanel = state.showAdd ? `
     <div class="add-sound-panel">
       <div class="add-sound-title">+ AGGIUNGI SUONO CUSTOM</div>
       <div class="sound-form">
         <input id="cs-name" placeholder="Nome (es. LASER)" maxlength="6">
-        <select id="cs-wave">
-          <option value="sine">Sine</option>
-          <option value="sawtooth">Sawtooth</option>
-          <option value="square">Square</option>
-          <option value="triangle">Triangle</option>
+        <select id="cs-wave" onchange="state.customForm.wave = this.value">
+          <option value="sine" ${state.customForm.wave === 'sine' ? 'selected' : ''}>Sine</option>
+          <option value="sawtooth" ${state.customForm.wave === 'sawtooth' ? 'selected' : ''}>Sawtooth</option>
+          <option value="square" ${state.customForm.wave === 'square' ? 'selected' : ''}>Square</option>
+          <option value="triangle" ${state.customForm.wave === 'triangle' ? 'selected' : ''}>Triangle</option>
         </select>
-        <input id="cs-freq" type="number" placeholder="Freq Hz (es. 440)" min="20" max="8000">
-        <input id="cs-sweep" type="number" placeholder="Sweep finale Hz (opt)" min="20" max="8000">
-        <input id="cs-dur" type="number" placeholder="Durata sec (es. 0.3)" min="0.05" max="3" step="0.05">
-        <input id="cs-filter" type="number" placeholder="Filtro Hz (es. 5000)" min="100" max="20000">
+
+        <div class="custom-knobs-row">
+          ${customKnobs.map(k => `
+            <div class="custom-knob-group">
+              <div class="custom-knob" data-custom-knob="${k.id}" onmousedown="startCustomKnob(event,'${k.id}')" ontouchstart="startCustomKnobT(event,'${k.id}')">
+                <div class="custom-knob-dot" style="transform:rotate(${k.angle}deg)"></div>
+              </div>
+              <div class="custom-knob-val" id="ckval-${k.id}">${k.val}</div>
+              <div class="custom-knob-label">${k.label}</div>
+            </div>`).join('')}
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px;">
+            <button class="preview-btn" id="preview-btn" onclick="previewCustomSound()">▶ TEST</button>
+          </div>
+        </div>
+
+        <input id="cs-freq" type="number" placeholder="Freq Hz (es. 440)" value="${state.customForm.freq}" min="20" max="8000" onchange="state.customForm.freq = parseFloat(this.value) || 440; renderDevice()">
+        <input id="cs-sweep" type="number" placeholder="Sweep finale Hz (opt)" value="${state.customForm.sweep || ''}" min="20" max="8000" onchange="state.customForm.sweep = this.value ? parseFloat(this.value) : null; renderDevice()">
+
         <div class="form-full">
           <button class="btn" style="flex:1" onclick="addCustomSound()">+ AGGIUNGI PAD</button>
           <button class="btn danger" onclick="state.showAdd=false;renderDevice()">ANNULLA</button>
@@ -1018,16 +1124,32 @@ function toggleFx(fx) {
   if (delayFb)   delayFb.gain.value   = state.fx.delay  ? 0.35 : 0;
   renderDevice();
 }
+
+function previewCustomSound() {
+  const btn = document.getElementById('preview-btn');
+  btn.classList.add('playing');
+  btn.textContent = '◉ PLAYING';
+  
+  const s = {
+    wave: state.customForm.wave,
+    freq: state.customForm.freq,
+    sweep: state.customForm.sweep,
+    dur: state.customForm.dur,
+    filter: state.customForm.filter
+  };
+  
+  makeCustom(s);
+  
+  setTimeout(() => {
+    btn.classList.remove('playing');
+    btn.textContent = '▶ TEST';
+  }, (state.customForm.dur || 0.3) * 1000);
+}
  
 function addCustomSound() {
   const name = (document.getElementById('cs-name').value || 'SND').toUpperCase().slice(0,6);
-  const wave = document.getElementById('cs-wave').value;
-  const freq = parseFloat(document.getElementById('cs-freq').value) || 440;
-  const sweep = parseFloat(document.getElementById('cs-sweep').value) || null;
-  const dur = parseFloat(document.getElementById('cs-dur').value) || 0.3;
-  const filter = parseFloat(document.getElementById('cs-filter').value) || 5000;
-  const s = { wave, freq, sweep, dur, filter };
   const customDev = DEVICES.find(d => d.id === 'custom');
+  const s = { ...state.customForm };
   customDev.pads.push({ n: name, fn: () => makeCustom(s) });
   if (!state.sequences['custom']) state.sequences['custom'] = [];
   state.sequences['custom'].push(Array(state.numSteps).fill(false));
@@ -1066,6 +1188,62 @@ function applyKD(id, dy, startVal) {
   if (id === 'fil') { state.filterFreq = 200 + v * 19800; if (filterNode) filterNode.frequency.value = state.filterFreq; const el = document.getElementById('kval-fil'); if (el) el.textContent = Math.round(state.filterFreq/100)/10 + 'k'; }
   if (id === 'rel') { state.release = v; const el = document.getElementById('kval-rel'); if (el) el.textContent = v.toFixed(1) + 's'; }
   const dot = document.querySelector(`[data-knob="${id}"] .knob-dot`);
+  if (dot) dot.style.transform = `rotate(${-135 + v*270}deg)`;
+}
+
+// ═══════════════════════════════════════════════
+//  CUSTOM KNOBS
+// ═══════════════════════════════════════════════
+let customKnobDrag = null;
+function startCustomKnob(e, id) {
+  customKnobDrag = { id, startY: e.clientY, startVal: getCustomKV(id) };
+  const move = e => { if (!customKnobDrag) return; applyCustomKD(customKnobDrag.id, customKnobDrag.startY - e.clientY, customKnobDrag.startVal); };
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', () => { customKnobDrag = null; document.removeEventListener('mousemove', move); }, { once: true });
+}
+function startCustomKnobT(e, id) {
+  e.preventDefault();
+  const t0 = e.touches[0];
+  customKnobDrag = { id, startY: t0.clientY, startVal: getCustomKV(id) };
+  const move = e => { if (!customKnobDrag) return; applyCustomKD(customKnobDrag.id, customKnobDrag.startY - e.touches[0].clientY, customKnobDrag.startVal); };
+  document.addEventListener('touchmove', move, { passive: false });
+  document.addEventListener('touchend', () => { customKnobDrag = null; document.removeEventListener('touchmove', move); }, { once: true });
+}
+function getCustomKV(id) {
+  if (id === 'freq') return Math.max(0, Math.min(1, (state.customForm.freq - 20) / 7980));
+  if (id === 'sweep') return state.customForm.sweep ? Math.max(0, Math.min(1, (state.customForm.sweep - 20) / 7980)) : 0.5;
+  if (id === 'dur') return Math.max(0, Math.min(1, (state.customForm.dur - 0.05) / 2.95));
+  if (id === 'filter') return Math.max(0, Math.min(1, (state.customForm.filter - 100) / 19900));
+  return 0.5;
+}
+function applyCustomKD(id, dy, startVal) {
+  const v = Math.max(0, Math.min(1, startVal + dy / 160));
+  if (id === 'freq') { 
+    state.customForm.freq = Math.round(20 + v * 7980);
+    const el = document.getElementById('cs-freq'); 
+    if (el) el.value = state.customForm.freq;
+    const valEl = document.getElementById('ckval-freq'); 
+    if (valEl) valEl.textContent = Math.round(state.customForm.freq) + ' Hz';
+  }
+  if (id === 'sweep') { 
+    state.customForm.sweep = state.customForm.sweep || 20;
+    state.customForm.sweep = Math.round(20 + v * 7980);
+    const el = document.getElementById('cs-sweep'); 
+    if (el) el.value = state.customForm.sweep;
+    const valEl = document.getElementById('ckval-sweep'); 
+    if (valEl) valEl.textContent = Math.round(state.customForm.sweep) + ' Hz';
+  }
+  if (id === 'dur') { 
+    state.customForm.dur = Math.max(0.05, Math.min(3, 0.05 + v * 2.95));
+    const valEl = document.getElementById('ckval-dur'); 
+    if (valEl) valEl.textContent = state.customForm.dur.toFixed(2) + 's';
+  }
+  if (id === 'filter') { 
+    state.customForm.filter = Math.round(100 + v * 19900);
+    const valEl = document.getElementById('ckval-filter'); 
+    if (valEl) valEl.textContent = Math.round(state.customForm.filter / 100) / 10 + 'k';
+  }
+  const dot = document.querySelector(`[data-custom-knob="${id}"] .custom-knob-dot`);
   if (dot) dot.style.transform = `rotate(${-135 + v*270}deg)`;
 }
  
