@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VERSION 3.0</title>
+<title>VERSION 3.1</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600&display=swap');
 
@@ -267,7 +267,7 @@
 
 <header>
   <div class="theme-picker">
-    <span class="theme-label">TEMA</span>
+    <span class="theme-label">THEME</span>
     <div id="theme-dots" style="display:flex;gap:6px;align-items:center"></div>
   </div>
   <div class="header-right">
@@ -280,18 +280,18 @@
   <div id="device-container"></div>
 
   <div class="songs-section">
-    <div class="songs-title">♪ CANZONI SALVATE</div>
+    <div class="songs-title">♪ SAVED SONGS</div>
     <div class="songs-row">
-      <input class="song-name-input" id="song-name-input" placeholder="Nome canzone..." maxlength="40">
-      <button class="btn save-btn" onclick="saveSong()">↓ SALVA</button>
-      <button class="btn load-btn" onclick="document.getElementById('file-input-song').click()">↑ CARICA FILE</button>
+      <input class="song-name-input" id="song-name-input" placeholder="Song name..." maxlength="40">
+      <button class="btn save-btn" onclick="saveSong()">↓ SAVE</button>
+      <button class="btn load-btn" onclick="document.getElementById('file-input-song').click()">↑ LOAD FILE</button>
     </div>
     <div class="songs-list" id="songs-list"></div>
   </div>
 </main>
 
 <script>
-// ═══════════════ TEMI ═══════════════
+// ═══════════════ THEMES ═══════════════
 const THEMES = [
   { name:'Cyan Night',  dot:'#5bc8e8', vars:{'--bg':'#0a0e14','--surface':'#111820','--surface2':'#1a2330','--border':'#1e3040','--accent':'#5bc8e8','--accent2':'#00ff88','--accent3':'#ff6b6b','--text':'#c8dce8','--text2':'#4a7090','--screen-bg':'#000d14','--screen-text':'#00d4ff','--screen-dim':'#003355','--pad':'#5bc8e8','--pad-text':'#001a28','--step-on':'#5bc8e8','--step-off':'#1a2330','--step-cur':'#00ff88'}},
   { name:'Purple Haze', dot:'#b06ef3', vars:{'--bg':'#0d0814','--surface':'#160e20','--surface2':'#1f1530','--border':'#2d1f45','--accent':'#b06ef3','--accent2':'#f06edf','--accent3':'#ff6b6b','--text':'#d8c8f0','--text2':'#5a3a80','--screen-bg':'#08040f','--screen-text':'#c87fff','--screen-dim':'#2a0a50','--pad':'#b06ef3','--pad-text':'#0d0814','--step-on':'#b06ef3','--step-off':'#1f1530','--step-cur':'#f06edf'}},
@@ -440,17 +440,17 @@ DEVICES.forEach(d=>{state.sequences[d.id]=Array(8).fill(null).map(()=>Array(stat
 // ═══════════════ SONGS ═══════════════
 let savedSongs=[];
 function loadSongsFromStorage(){try{const r=localStorage.getItem('beatSongs');if(r)savedSongs=JSON.parse(r);}catch(e){savedSongs=[];}}
-function saveSongsToStorage(){try{localStorage.setItem('beatSongs',JSON.stringify(savedSongs));}catch(e){showToast('Memoria piena!',true);}}
+function saveSongsToStorage(){try{localStorage.setItem('beatSongs',JSON.stringify(savedSongs));}catch(e){showToast('Storage full!',true);}}
 
 function saveSong(){
   const inp=document.getElementById('song-name-input');
-  const name=inp.value.trim()||('canzone-'+new Date().toISOString().slice(0,10));
+  const name=inp.value.trim()||('song-'+new Date().toISOString().slice(0,10));
   const customPads=DEVICES.find(d=>d.id==='custom').pads.map(p=>({n:p.n,params:p._params||null}));
   savedSongs.push({version:1,name,savedAt:new Date().toISOString(),bpm:state.bpm,numSteps:state.numSteps,
     volume:state.volume,filterFreq:state.filterFreq,release:state.release,fx:{...state.fx},
     activeDevice:state.activeDevice,sequences:JSON.parse(JSON.stringify(state.sequences)),
     customPads,theme:activeTheme});
-  saveSongsToStorage(); inp.value=''; renderSongs(); showToast('✓ '+name+' salvata!');
+  saveSongsToStorage(); inp.value=''; renderSongs(); showToast('✓ '+name+' saved!');
 }
 
 function loadSong(idx){
@@ -467,30 +467,30 @@ function loadSong(idx){
   if(s.customPads){const cd=DEVICES.find(d=>d.id==='custom');cd.pads=s.customPads.map(p=>({n:p.n,_params:p.params,fn:p.params?()=>makeCustom(p.params):()=>{}}));}
   if(ctx){if(reverbMix)reverbMix.gain.value=state.fx.reverb?0.35:0;if(delayMix)delayMix.gain.value=state.fx.delay?0.4:0;if(delayFb)delayFb.gain.value=state.fx.delay?0.35:0;if(masterGain)masterGain.gain.value=state.volume;if(filterNode)filterNode.frequency.value=state.filterFreq;}
   if(s.theme!==undefined)applyTheme(s.theme);
-  renderTabs();renderDevice();showToast('♪ '+s.name+' caricata!');
+  renderTabs();renderDevice();showToast('♪ '+s.name+' loaded!');
 }
 
-function deleteSong(idx){const name=savedSongs[idx].name;savedSongs.splice(idx,1);saveSongsToStorage();renderSongs();showToast('Eliminata: '+name);}
+function deleteSong(idx){const name=savedSongs[idx].name;savedSongs.splice(idx,1);saveSongsToStorage();renderSongs();showToast('Deleted: '+name);}
 
 function exportSong(idx){
   const s=savedSongs[idx],json=JSON.stringify(s,null,2),blob=new Blob([json],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=(s.name||'canzone').replace(/[^a-z0-9]/gi,'_')+'.json';document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);showToast('↓ File scaricato!');
+  a.href=url;a.download=(s.name||'song').replace(/[^a-z0-9]/gi,'_')+'.json';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},500);showToast('↓ File downloaded!');
 }
 
 function importSongFile(event){
   const file=event.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{try{const s=JSON.parse(e.target.result);if(!s.version||!s.sequences)throw new Error('File non valido');savedSongs.push(s);saveSongsToStorage();renderSongs();showToast('↑ '+(s.name||'canzone')+' importata!');}catch(err){showToast('Errore: '+err.message,true);}};
+  reader.onload=e=>{try{const s=JSON.parse(e.target.result);if(!s.version||!s.sequences)throw new Error('Invalid file');savedSongs.push(s);saveSongsToStorage();renderSongs();showToast('↑ '+(s.name||'song')+' imported!');}catch(err){showToast('Error: '+err.message,true);}};
   reader.readAsText(file);event.target.value='';
 }
 
 function renderSongs(){
   const list=document.getElementById('songs-list');
-  if(!savedSongs.length){list.innerHTML='<div style="font-family:var(--font-mono);font-size:10px;color:var(--text2);padding:.5rem 0">Nessuna canzone. Premi ↓ SALVA per salvare la sessione corrente.</div>';return;}
+  if(!savedSongs.length){list.innerHTML='<div style="font-family:var(--font-mono);font-size:10px;color:var(--text2);padding:.5rem 0">No songs yet. Press ↓ SAVE to save the current session.</div>';return;}
   list.innerHTML=savedSongs.map((s,i)=>{
-    const date=new Date(s.savedAt).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-    return`<div class="song-item"><div class="song-item-name">♪ ${s.name}</div><div class="song-item-meta">${s.bpm}bpm · ${s.numSteps}st · ${date}</div><button class="btn-sm load" onclick="loadSong(${i})">▶ CARICA</button><button class="btn-sm" onclick="exportSong(${i})">↓ FILE</button><button class="btn-sm danger" onclick="deleteSong(${i})">✕</button></div>`;
+    const date=new Date(s.savedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return`<div class="song-item"><div class="song-item-name">♪ ${s.name}</div><div class="song-item-meta">${s.bpm}bpm · ${s.numSteps}st · ${date}</div><button class="btn-sm load" onclick="loadSong(${i})">▶ LOAD</button><button class="btn-sm" onclick="exportSong(${i})">↓ FILE</button><button class="btn-sm danger" onclick="deleteSong(${i})">✕</button></div>`;
   }).join('');
 }
 
@@ -537,7 +537,7 @@ function renderDevice(){
   const ckD=Math.max(0,Math.min(1,(state.customForm.dur-0.05)/2.95));
   const ckFl=Math.max(0,Math.min(1,(state.customForm.filter-100)/19900));
   const customKnobs=[{id:'freq',label:'FREQ',angle:-135+ckF*270,val:Math.round(state.customForm.freq)+' Hz'},{id:'sweep',label:'SWEEP',angle:-135+ckS*270,val:state.customForm.sweep?Math.round(state.customForm.sweep)+' Hz':'---'},{id:'dur',label:'DUR',angle:-135+ckD*270,val:state.customForm.dur.toFixed(2)+'s'},{id:'filter',label:'FILT',angle:-135+ckFl*270,val:Math.round(state.customForm.filter/100)/10+'k'}];
-  const addPanel=state.showAdd?`<div class="add-sound-panel"><div class="add-sound-title">+ AGGIUNGI SUONO CUSTOM</div><div class="sound-form"><input id="cs-name" placeholder="Nome (es. LASER)" maxlength="6"><select id="cs-wave" onchange="state.customForm.wave=this.value"><option value="sine" ${state.customForm.wave==='sine'?'selected':''}>Sine</option><option value="sawtooth" ${state.customForm.wave==='sawtooth'?'selected':''}>Sawtooth</option><option value="square" ${state.customForm.wave==='square'?'selected':''}>Square</option><option value="triangle" ${state.customForm.wave==='triangle'?'selected':''}>Triangle</option></select><div class="custom-knobs-row">${customKnobs.map(k=>`<div class="custom-knob-group"><div class="custom-knob" data-custom-knob="${k.id}" onmousedown="startCustomKnob(event,'${k.id}')" ontouchstart="startCustomKnobT(event,'${k.id}')"><div class="custom-knob-dot" style="transform:rotate(${k.angle}deg)"></div></div><div class="custom-knob-val" id="ckval-${k.id}">${k.val}</div><div class="custom-knob-label">${k.label}</div></div>`).join('')}<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px"><button class="preview-btn" id="preview-btn" onclick="previewCustomSound()">▶ TEST</button></div></div><input id="cs-freq" type="number" placeholder="Freq Hz" value="${state.customForm.freq}" min="20" max="8000" onchange="state.customForm.freq=parseFloat(this.value)||440;renderDevice()"><input id="cs-sweep" type="number" placeholder="Sweep Hz (opt)" value="${state.customForm.sweep||''}" min="20" max="8000" onchange="state.customForm.sweep=this.value?parseFloat(this.value):null;renderDevice()"><div class="form-full"><button class="btn" style="flex:1" onclick="addCustomSound()">+ AGGIUNGI PAD</button><button class="btn danger" onclick="state.showAdd=false;renderDevice()">ANNULLA</button></div></div></div>`:'';
+  const addPanel=state.showAdd?`<div class="add-sound-panel"><div class="add-sound-title">+ ADD CUSTOM SOUND</div><div class="sound-form"><input id="cs-name" placeholder="Name (e.g. LASER)" maxlength="6"><select id="cs-wave" onchange="state.customForm.wave=this.value"><option value="sine" ${state.customForm.wave==='sine'?'selected':''}>Sine</option><option value="sawtooth" ${state.customForm.wave==='sawtooth'?'selected':''}>Sawtooth</option><option value="square" ${state.customForm.wave==='square'?'selected':''}>Square</option><option value="triangle" ${state.customForm.wave==='triangle'?'selected':''}>Triangle</option></select><div class="custom-knobs-row">${customKnobs.map(k=>`<div class="custom-knob-group"><div class="custom-knob" data-custom-knob="${k.id}" onmousedown="startCustomKnob(event,'${k.id}')" ontouchstart="startCustomKnobT(event,'${k.id}')"><div class="custom-knob-dot" style="transform:rotate(${k.angle}deg)"></div></div><div class="custom-knob-val" id="ckval-${k.id}">${k.val}</div><div class="custom-knob-label">${k.label}</div></div>`).join('')}<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px"><button class="preview-btn" id="preview-btn" onclick="previewCustomSound()">▶ TEST</button></div></div><input id="cs-freq" type="number" placeholder="Freq Hz" value="${state.customForm.freq}" min="20" max="8000" onchange="state.customForm.freq=parseFloat(this.value)||440;renderDevice()"><input id="cs-sweep" type="number" placeholder="Sweep Hz (opt)" value="${state.customForm.sweep||''}" min="20" max="8000" onchange="state.customForm.sweep=this.value?parseFloat(this.value):null;renderDevice()"><div class="form-full"><button class="btn" style="flex:1" onclick="addCustomSound()">+ ADD PAD</button><button class="btn danger" onclick="state.showAdd=false;renderDevice()">CANCEL</button></div></div></div>`:'';
 
   document.getElementById('device-container').innerHTML=`<div class="device"><div class="screen"><div class="screen-top"><span class="screen-label">${dev.name}</span><span class="screen-bpm">${state.bpm} BPM</span></div><div class="screen-row"><span class="screen-info${state.playing?' on':''}" data-k="play">${state.playing?'PLAY':'STOP'}</span><span class="screen-info${state.rec?' rec-on':''}" data-k="rec">${state.rec?'REC':'---'}</span><span class="screen-info" data-k="step">ST ${String(state.currentStep+1).padStart(2,'0')}/${state.numSteps}</span><span class="screen-info" data-k="fx">FX:${state.fx.reverb?'R':'-'}${state.fx.delay?'D':'-'}</span></div></div><div class="pads-grid">${padsHTML}</div><div class="step-section">${stepsHTML}</div><div class="controls-panel"><div class="knobs-row">${knobs.map(k=>`<div class="knob-group"><div class="knob" data-knob="${k.id}" onmousedown="startKnob(event,'${k.id}')" ontouchstart="startKnobT(event,'${k.id}')"><div class="knob-dot" style="transform:rotate(${k.angle}deg)"></div></div><div class="knob-val" id="kval-${k.id}">${k.val}</div><div class="knob-label">${k.label}</div></div>`).join('')}<div class="fx-section"><div class="fx-label">FX</div><div class="fx-chain"><button class="fx-btn${state.fx.reverb?' active':''}" onclick="toggleFx('reverb')">REVERB</button><button class="fx-btn${state.fx.delay?' active':''}" onclick="toggleFx('delay')">DELAY</button></div></div></div><div class="btn-row"><button id="btn-play" class="btn${state.playing?' active':''}" onclick="togglePlay()">${state.playing?'■ STOP':'▶ PLAY'}</button><button id="btn-rec" class="btn rec${state.rec?' active':''}" onclick="toggleRec()">● REC</button><button class="btn" onclick="clearSeq()">✕ CLR</button><button class="btn" onclick="state.showAdd=!state.showAdd;renderDevice()">+ SUONO</button></div><div class="tempo-row"><label>TEMPO</label><input type="range" min="60" max="220" value="${state.bpm}" step="1" oninput="changeBpm(this.value)"><span class="tempo-val" id="tempo-val">${state.bpm} BPM</span></div><div class="steps-row"><label>PASSI</label><select onchange="changeSteps(this.value)">${[8,12,16,24,32,48,64].map(n=>`<option value="${n}"${n===state.numSteps?' selected':''}>${n} step</option>`).join('')}</select></div></div>${addPanel}</div>`;
 }
@@ -615,4 +615,4 @@ renderSongs();
 </body>
 </html>
 © 2026 Ismaele. All rights reserved.
-Created: 04-05-2026 | Last Update: 30-05-2026
+Created: 04-05-2026 | Last Update: 07-08-2026
